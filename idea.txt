@@ -1,0 +1,60 @@
+The RBE should be capabale of the following:
+    - Allowing substituion of one representation with another (will use lists)
+    - Loading rules from a human readable and storage efficient file
+    - Allow adding, removing, and updating rules while running
+    - Allow conditional equality (only true if platform is windows)
+    - Allow assertion of equality (this representation is equivalent to that representation)
+    - Allow storing a certain metric or accepting a function that returns a metric
+    - Allow substitutions of equivalent representations to maximize/minimize a certain metric using exhaustive search
+    - Allow the creation of equality rules (with regex-like capabilities) ".*, 'if', '(', (.*), ')', '{', (.*), '}', '.*'" eq %1 if isconstant(%0)
+    - Allow calling functions inside of equality rules to determine equality
+
+
+Proof of Concept/Examples:
+
+DATABASE FILE:
+r1 eq r2 eq r3 # where r1, r2, and r3 are lists of tokens that are asserted to be equal
+
+r1:m1,m2,m3 eq # where m1, m2, and m3 are metric values against some metric
+r2:_,m2,m3 # should be able to span multiple lines if the last line ended in eq
+
+r1 eq r2 if platform = windows # conditional rules
+
+
+EQUALITY RULES:
+[.*$0, if, (, .*$1, ), {, .*$2, }, .*$3]:1:1 eq
+[$0, $2, $3]:0:0 if isconst($1)
+
+
+INVOCATION:
+maximize m1 # maximize using a metric
+minimize someFunc # maximize using a function
+
+
+
+Final Syntax
+".*$0 if \( .*$1 \) \{ .*$2 \} .*$3" eq "%0 %2 %3" if isconst(%1)
+
+quotes are used to delimit rules
+spaces are used to delimit tokens
+$x stores what is in the rest of the token in a variable called x
+%x gets the value of what is in variable x
+Must escape characters to get their literal value (here are some special values that must be escaped to get literal):
+    . - any token
+    + - repeat 1 or more times
+    * - repeat 0 or more times
+    " - delimit rules
+    () - grouping (for repetitions)
+    {x,y} - repeat from x to y times
+    [] - list of possible tokens
+    | - match multiple tokens
+    $ - set variable
+    % - get variable
+
+
+    
+
+
+
+
+
