@@ -50,6 +50,8 @@ Must escape characters to get their literal value (here are some special values 
     | - match multiple tokens
     $ - set variable
     % - get variable
+    \ - escape char
+    ? - match opener (for ), }, ], ", and ')
 
 
     
