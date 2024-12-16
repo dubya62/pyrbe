@@ -1,5 +1,21 @@
 
 
+class MatchResult:
+    def __init__(self, clause:str, matched_token:list[list[str]], offset:int, length:int, variables:list[list[str]]):
+        # the offset of the match, the number of matched tokens, and a list of the variable values
+        self.clause = clause
+        self.matched_tokens = matched_tokens
+        self.offset = offset
+        self.length = length
+        self.variables = variables
+
+    def __str__(self):
+        return f"MatchResult:\nMatched clause: {self.clause}\nMatched Tokens: {self.matched_tokens}\nOffset: {self.offset}\nLength: {self.length}\nVariables: {self.variables}"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class Rule:
     def __init__(self, clauses:list[str], condition:str):
         self.clauses = clauses
@@ -8,6 +24,8 @@ class Rule:
         self.metrics = []
         self.parse_metrics()
 
+        print("\nCOMPILING:")
+        self.compiled = [self.compile_clause(x) for x in self.clauses]
         # if the condition is checkable, check it
         # if condition is true or not checkable, start matching
 
@@ -27,6 +45,34 @@ class Rule:
             metrics = [x for x in metrics.split(":") if x != ""]
             self.metrics.append(metrics)
 
+
+    def compile_clause(self, clause:str):
+        # convert a clause into a much faster list of instructions
+        # should be able to call this as a function
+        # input a list of tokens -> where the match was found and the length of the match
+        instructions = []
+        clause = clause.strip('"').split(" ")
+        store = []
+        get = []
+        min_repetitions = [1] * len(clause)
+        max_repetitions = [1] * len(clause)
+        print(clause)
+        print(min_repetitions)
+        print(max_repetitions)
+
+        for x in clause:
+            if "$" in x:
+                pass
+        
+        pass
+
+
+    def match(self, tokens:list[str]):
+        # match a list of tokens against this rule
+        # return the matched clause, which tokens were matched (as a list of lists), 
+        # the offset of the match, the number of matched tokens, and a list of the variable values
+        pass
+        
 
     def __str__(self):
         return f"RULE: {' eq '.join(self.clauses)} if {self.condition if len(self.condition) else 'True'}"
