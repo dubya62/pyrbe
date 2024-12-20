@@ -40,18 +40,19 @@ spaces are used to delimit tokens
 $x stores what is in the rest of the token in a variable called x
 %x gets the value of what is in variable x
 Must escape characters to get their literal value (here are some special values that must be escaped to get literal):
-    . - any token
-    + - repeat 1 or more times
-    * - repeat 0 or more times
-    " - delimit rules
-    () - grouping (for repetitions)
-    {x,y} - repeat from x to y times
-    [] - list of possible tokens
-    | - match multiple tokens
-    $ - set variable
-    % - get variable
-    \ - escape char
-    ? - match opener (for ), }, ], ", and ')
+    + . - any token
+    + + - repeat 1 or more times
+    + * - repeat 0 or more times
+    + " - delimit rules
+    + {x,y} - repeat from x to y times
+    + | - match multiple tokens
+    + $ - set variable
+    + % - get variable
+    + \ - escape char
+    ( - start group
+    ) - end group
+    ? - start match opener (for ), }, ], ", and ')
+    ! - end match opener (for ), }, ], ", and ')
     ^ - match if not
 
 
