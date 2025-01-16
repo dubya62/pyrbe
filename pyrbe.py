@@ -28,6 +28,90 @@ class MatchRule:
         self.get = get
 
 
+    def partial_match(self, clause_index, tokens, current_matches):
+        # perform the first part of a match. 
+        # once matched, try to match the rest of the tokens with all but the first part of the clause
+        
+        # match the first token of the clause with all possible token matches
+        print(f"partial_match: {clause_index} {self.clause[clause_index]} {tokens} {self.clause[clause_index+1:]}")
+        matches = []
+        matcher = self.matchers[clause_index]
+        print(f"Matcher: {matcher}")
+
+        start_reps = self.min_repetitions[clause_index]
+        if start_reps is None:
+            start_reps = 0
+
+        end_reps = self.max_repetitions[clause_index]
+        if end_reps is None:
+            end_reps = len(tokens)+1
+        print(f"start: {start_reps}\tend: {end_reps}")
+
+        # first, match with the minimum number
+        i = 0
+        while i < start_reps:
+            if i >= len(tokens):
+                # there are not enough tokens to even start: return None
+                return None
+            # check if this matches
+            matches = matcher(tokens[i])
+            if not matches:
+                # we cannot even start matching.
+                return None
+            i += 1
+
+        print(f"current_matches: {current_matches}")
+        # we have now matched with the minimum number
+        result = []
+        while i <= end_reps:
+            # if it does match, recursively call
+            print(f"remaining: {tokens[i:]}")
+            if clause_index + 1 < len(self.matchers):
+                print(f"SENT TO CHILD")
+                new_matches = current_matches + [(self.clause[clause_index], tokens[:i])]
+                child_result = self.partial_match(clause_index + 1, tokens[i:], new_matches)
+                result.append(child_result)
+            else:
+                print("NO CHILD REMAINING")
+
+
+            if i < len(tokens):
+                # if out of tokens, return the result
+                matches = matcher(tokens[i])
+                print(matches, tokens[i], matcher)
+            else:
+                if clause_index == len(self.clause) - 1:
+                    print(f"MADE IT TO THE END: {current_matches + [(self.clause[clause_index], result)]}")
+                print("NO CHILD REMAINING")
+                # new_matches = current_matches + [(self.clause[clause_index], [])]
+                # child_result = self.partial_match(clause_index + 1, [], new_matches)
+                # print(clause_index + 1)
+                # print(self.clause)
+                # result.append(child_result)
+                return result
+
+            # if it doesn't match, then we are done for this token
+            if not matches:
+                return result
+            i += 1
+
+
+        return result
+
+
+    def match(self, tokens) -> list[MatchResult]:
+        # attempt to match a list of tokens. and return all possible matches as a list of MatchResult
+        i = 0
+        n = len(tokens)
+        print(self.clause)
+
+        result = self.partial_match(0, tokens, [])
+        print("RESULT")
+        print(result)
+
+        pass
+
+
 class Rule:
     def __init__(self, clauses:list[str], condition:str):
         self.clauses = clauses
@@ -38,8 +122,39 @@ class Rule:
 
         print("\nCOMPILING:")
         self.compiled = [self.compile_clause(x) for x in self.clauses]
+
+
+    def match(self, tokens):
+        print("Matching tokens against rule")
+
+
+    def minimize(self, metric, tokens):
+        print(f"Minimizing metric {metric} for tokens: {tokens}")
         # if the condition is checkable, check it
+        print(f"Checking the condition: {self.condition}")
+        # TODO: check the condition
+        condition = True
+
         # if condition is true or not checkable, start matching
+        # iterate through the compiled clauses
+        if condition:
+            print(f"Condition was True. Matching against compiled clauses.")
+            print(f"Minimizing metric {metric}: ({self.metrics})")
+
+            # try matching each compiled clause
+            clause = 0
+            num_clauses = len(self.compiled)
+            while clause < num_clauses:
+                print(f"Checking against clause: {self.compiled[clause]}")
+                self.compiled[clause].match(tokens)
+
+                clause += 1
+        
+
+        # if the condition was false, just quit
+        return tokens
+
+
 
 
     def parse_metrics(self):
@@ -70,12 +185,12 @@ class Rule:
         max_repetitions = [1] * len(clause)
         match_openers = [False] * len(clause)
         match_closers = [False] * len(clause)
+        self.match_tokens = []
+        for i in range(len(clause)):
+            self.match_tokens.append([])
 
         def ANY(token:str):
             return True
-
-        def create_contains_fun(token_list:list[str]):
-            return lambda tok: tok in token_list
 
         current_token = 0
         for x in clause:
@@ -105,7 +220,7 @@ class Rule:
                         continue
                 elif x[y] == "|":
                     if backslashes % 2 == 0:
-                        match_tokens.append(match_token)
+                        match_tokens.append(match_token.strip("\\"))
                         match_token = ""
                         backslashes = 0
                         continue
@@ -180,10 +295,12 @@ class Rule:
 
 
             if len(match_token) > 0:
-                match_tokens.append(match_token)
+                match_tokens.append(match_token.strip("\\"))
 
             if the_fun == None:
-                matchers[current_token] = create_contains_fun(match_tokens)
+                self.match_tokens[current_token] = list(match_tokens)
+
+                matchers[current_token] = self.create_contains(match_tokens)
             else:
                 matchers[current_token] = the_fun
 
@@ -205,11 +322,22 @@ class Rule:
         return result
 
 
+    def create_contains(self, match_tokens):
+        new_match_tokens = []
+        for x in match_tokens:
+            new_match_tokens.append(x)
+        return lambda tok: tok in new_match_tokens
+
+
     def match(self, tokens:list[str]):
         # match a list of tokens against this rule
         # return the matched clause, which tokens were matched (as a list of lists), 
         # the offset of the match, the number of matched tokens, and a list of the variable values
-        pass
+
+        for clause in self.compiled:
+            print(f"Matching clause {clause}")
+            clause.match(tokens)
+
         
 
     def __str__(self):
@@ -226,7 +354,7 @@ class RBE:
 
         self.file_data = self.read_from_file("test.rbe")
         print(self.file_data)
-        rbe_string =  self.parse_rbe_string(self.file_data)
+        rbe_string = self.parse_rbe_string(self.file_data)
         self.rules = self.parse_rules(rbe_string)
         print("\nRULES:")
         [print(x) for x in self.rules]
@@ -350,6 +478,34 @@ class RBE:
         return result
 
 
+    def minimize_metric(self, metric, tokens):
+        # using my rules, minimize the given metric
+
+        # match against each rule in order
+        rule = 0
+        num_rules = len(self.rules)
+        while rule < num_rules:
+            # attempt to reduce this metric using this rule
+            current_rule = self.rules[rule]
+
+            tokens = current_rule.minimize(metric, tokens)
+            
+            rule += 1
+
+
+
+
+
+
 if __name__ == "__main__":
     rbe = RBE()
+
+    test_tokens = ["if", "(", "x", ">", "0", ")", "{", "printf", "(", ")", ";", "}"]
+
+    rbe.minimize_metric(0, test_tokens)
+
+
+
+
+
 
