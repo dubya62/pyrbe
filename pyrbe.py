@@ -1,7 +1,7 @@
 
 
 class MatchResult:
-    def __init__(self, clause:str, matched_token:list[list[str]], offset:int, length:int, variables:list[list[str]]):
+    def __init__(self, clause:str, matched_tokens:list[list[str]], offset:int, length:int, variables:list[list[str]]):
         # the offset of the match, the number of matched tokens, and a list of the variable values
         self.clause = clause
         self.matched_tokens = matched_tokens
@@ -82,12 +82,8 @@ class MatchRule:
             else:
                 if clause_index == len(self.clause) - 1:
                     print(f"MADE IT TO THE END: {current_matches + [(self.clause[clause_index], result)]}")
+                    return ("END", current_matches + [(self.clause[clause_index], tokens)])
                 print("NO CHILD REMAINING")
-                # new_matches = current_matches + [(self.clause[clause_index], [])]
-                # child_result = self.partial_match(clause_index + 1, [], new_matches)
-                # print(clause_index + 1)
-                # print(self.clause)
-                # result.append(child_result)
                 return result
 
             # if it doesn't match, then we are done for this token
@@ -99,17 +95,63 @@ class MatchRule:
         return result
 
 
+    def parse_matches(self, matches):
+        results = []
+        print(f"matches: {matches}")
+        if matches is not None:
+            for match in matches:
+                if issubclass(type(match), list): 
+                    print(f"match {match}")
+                    result = self.parse_matches(match)
+                    if result is not None:
+                        results += result
+                elif match != None:
+                    if match[0] == "END":
+                        return [match[1]]
+
+        if len(results) > 0:
+            return results
+        return None
+
+
     def match(self, tokens) -> list[MatchResult]:
         # attempt to match a list of tokens. and return all possible matches as a list of MatchResult
         i = 0
         n = len(tokens)
         print(self.clause)
 
-        result = self.partial_match(0, tokens, [])
-        print("RESULT")
-        print(result)
+        results = []
+        while i < n:
+            result = self.partial_match(0, tokens[i:], [])
 
-        pass
+            # parse the result for matches
+            parsed = self.parse_matches(result)
+            print(f"parsed: {parsed}")
+            if parsed is not None:
+                # convert the results into a MatchResult
+                for x in parsed:
+                    matched_tokens = []
+                    length = 0
+                    for y in x:
+                        matched_tokens.append(y[1])
+                        length += len(y[1])
+
+                    # get the variable mappings
+                    variable_mappings = []
+                    for store in self.store:
+                        variable_mappings.append(None)
+                        if store is not None:
+                            variable_mappings[-1] = matched_tokens[store]
+
+                    match_result = MatchResult(self.clause, matched_tokens, i, length, variable_mappings)
+                    results.append(match_result)
+            i += 1
+
+        print("\n\n\n")
+        print("ALL POSSIBLE MATCHES:")
+        print(results)
+        print("\n\n\n")
+        return results
 
 
 class Rule:
@@ -146,7 +188,38 @@ class Rule:
             num_clauses = len(self.compiled)
             while clause < num_clauses:
                 print(f"Checking against clause: {self.compiled[clause]}")
-                self.compiled[clause].match(tokens)
+                match_results = self.compiled[clause].match(tokens)
+                print(f"Matching results: {match_results}")
+
+                # we now have the match results. now look for a clause that is cheaper than this one
+                if len(match_results) > 0:
+                    print("We have found a match")
+                    my_metric = self.metrics[clause][metric]
+                    if my_metric == "_":
+                        my_metric = 10000000000000000000
+                    my_metric = int(my_metric)
+                    print(f"Current metric: {my_metric}")
+
+                    min_metric_index = clause
+                    min_metric = my_metric
+                    for i in range(len(self.metrics)):
+                        other_metric = self.metrics[i][metric]
+                        if other_metric == "_":
+                            other_metric = 10000000000000000001
+                        other_metric = int(other_metric)
+
+                        print(f"Other metric: {other_metric}, My metric: {my_metric}")
+                        if other_metric < min_metric:
+                            min_metric = other_metric
+                            min_metric_index = i
+
+                    print(f"Cheapest found metric: {min_metric}     - saves {my_metric - min_metric}")
+                    print(f"Replacing clause {clause} with {min_metric_index}") 
+
+                    # use the match result to perform the substitution
+                    tokens = self.perform_substitution(tokens, match_results[0], min_metric_index)
+
+                    return tokens
 
                 clause += 1
         
@@ -154,6 +227,38 @@ class Rule:
         # if the condition was false, just quit
         return tokens
 
+
+    def perform_substitution(self, tokens:list[str], match_result:MatchResult, substitution_clause):
+        result = tokens[:match_result.offset] 
+
+        comp = self.compiled[substitution_clause]
+        print(f"comp: {comp}")
+
+        print(f"vars: {match_result.variables}")
+
+        sub = []
+        for tok in range(len(comp.clause)):
+            subbed = False
+            if len(comp.store) > tok and comp.store[tok] is not None:
+                if len(match_result.variables) > comp.store[tok]:
+                    sub += match_result.variables[comp.store[tok]]
+                    print(f"Subbing: {sub}")
+                    subbed = True
+            else:
+                for get_index, get in enumerate(comp.get):
+                    if tok in get:
+                        print(f"get found: {tok}")
+                        sub += match_result.variables[get_index]
+                        subbed = True
+
+            if not subbed:
+                sub.append(comp.clause[tok])
+
+        result += sub
+        result += tokens[match_result.offset+match_result.length+1:]
+        print(f"Substituted into {self.clauses[substitution_clause]}")
+        print(f"Substitution Result: {result}")
+        return result
 
 
 
@@ -492,8 +597,7 @@ class RBE:
             
             rule += 1
 
-
-
+        return tokens
 
 
 
@@ -502,7 +606,9 @@ if __name__ == "__main__":
 
     test_tokens = ["if", "(", "x", ">", "0", ")", "{", "printf", "(", ")", ";", "}"]
 
-    rbe.minimize_metric(0, test_tokens)
+    test_result = rbe.minimize_metric(0, test_tokens)
+
+    print(f"\nTest Case: \n{test_tokens}\n=>\n{test_result}")
 
 
 
