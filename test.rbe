@@ -1,4 +1,8 @@
 # this is a comment
-".*$0 if \(|\{? .*$1 \)! \{ .*$2 \} .*$3":2:3:4 eq "%0 %2 %3":1:3:2 if isconst(%1 + 2)
-".*$0 printf .*$1":5 eq "%0 puts %1":2
 
+# replace if statement with constant condition with its inner code
+".*$0 if \(|\{? .*$1 \)! \{ .*$2 \} .*$3":2:3:4 eq "%0 %2 %3":1:3:2 if isconst(%1 + 2)
+
+# replace printf with puts
+#".*$0 printf .*$1":5 eq "%0 puts %1":2
+".*$0 printf .*$1":5 eq "%0 puts %1":2

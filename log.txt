@@ -1,0 +1,41 @@
+commit 283cec9ce0d36c2c2a8c37caa516af13f5af17b1
+Author: dubya <dubya297@yahoo.com>
+Date:   Fri Jan 17 15:55:58 2025 -0600
+
+    Finished the first version of the rule based engine. Should be sufficient for token substitution.
+
+commit 2625b28a2465f3ea86bd730c4ec29f82004070c7
+Author: dubya <dubya297@yahoo.com>
+Date:   Wed Jan 15 19:45:01 2025 -0600
+
+    Seem to have finished matching.
+
+commit 1753fca86121dfd15ce60dc9effa5f1803526fa6
+Author: dubya <dubya297@yahoo.com>
+Date:   Fri Dec 20 17:19:22 2024 -0600
+
+    Still working on the ? and ! matching.
+
+commit 61aef56e4b519619f8afa890c8aefffc4c5da126
+Author: dubya <dubya297@yahoo.com>
+Date:   Mon Dec 16 11:24:10 2024 -0600
+
+    Continued working on ideas for how clause compilation will work.
+
+commit 337d298d226fee49ec09e26a6cf1545b7a5f23ba
+Author: dubya <dubya297@yahoo.com>
+Date:   Sun Dec 15 19:53:26 2024 -0600
+
+    Started working on parsing a given input file.
+
+commit 76a937974bbceb88040f4901400566b4d3119a00
+Author: dubya <dubya297@yahoo.com>
+Date:   Sun Dec 15 17:29:59 2024 -0600
+
+    Added the final ideas for the syntax and regex rules.
+
+commit fc951d553430138d615c9b354c5eff5e0820f939
+Author: dubya <dubya297@yahoo.com>
+Date:   Sun Dec 15 16:30:53 2024 -0600
+
+    Initial commit.
