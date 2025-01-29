@@ -61,9 +61,31 @@ def read_ir_file(ir_file):
         sys.exit(1)
 
 # I don't what to do with this yet (救我呀 快救救我)
-def insert_rule_into_database(rule_db, rule_name, metrics, insert_ine):
-    with open(rule_db, 'a') as f:
-        f.write(f'"{rule}":{metrics}\n')
+# insert rules the IR rule with metrics into the rule database file at the specified line number. 
+def insert_rule_into_database(rule_database_file, ir_tokens, metrics, insert_line):
+    try: 
+        with open(rule_database_file, "r") as f: 
+            lines = f.readlines()
+            
+        # formate the new rule with metrics 
+        formatted_rule = f'"{ir_tokens}":{metrics[0]}:{metrics[1]}'
+        
+        # insert the new rule at the specifiied line number 
+        if insert_line - 1 < len(lines): 
+            lines.insert(insert_line - 1, formatted_rule + "eq\n") 
+        else: 
+            lines.append(formatted_rule + "eq\n")
+            
+        # write back to the new database file 
+        with open(rule_database_file, "w") as f: 
+            f.writelines(lines)
+            
+        print(f"Inserted rule from IR file with metrics {metrics} at line {insert_line}.")
+        
+    except Exception as e: 
+        print(f"Failed to update rule into database: {e}")
+        sys.exit(1)
+        
 
 
 # the main function haha get it "main" function (not sorry) to handle the process 
