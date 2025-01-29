@@ -97,10 +97,24 @@ def main(c_source_file, ir_file, rule_database_file, insert_line, rule_name):
     # run the compiled file with perf stat to gather metrics 
     metrics = run_perf_stat("a.out")
     
+    # read the IR file to extract tokens 
+    ir_tokens = read_ir_file(ir_file)
+    
     # insert the rule with the metrics into the rule database
-    insert_rule_into_database(rule_database_file, rule_name, metrics, insert_line)
+    insert_rule_into_database(rule_database_file, ir_tokens, metrics, insert_line)
     
     print("Process completed")
 
-# if __name__ == "main": 
-#     if len(sys)
+
+
+if __name__ == "main": 
+    if len(sys) != 5: 
+        print("Usage: python3 rbe_insert.py <c_source_file> <ir_file> <rule_database_file> <insert_line>")
+        sys.exit(1)
+        
+    c_source_file = sys.argv[1] # c source file 
+    ir_file = sys.argv[2]  # ir file that contains the tokens 
+    rule_database_file = sys.argv[3]  # rule database file 
+    insert_line = int(sys.argv[4])  # line number to insert the rule 
+    
+    main(c_source_file, ir_file, rule_database_file, insert_line)
