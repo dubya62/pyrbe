@@ -89,7 +89,7 @@ def insert_rule_into_database(rule_database_file, ir_tokens, metrics, insert_lin
 
 
 # the main function haha get it "main" function (not sorry) to handle the process 
-def main(c_source_file, ir_file, rule_database_file, insert_line, rule_name): 
+def main(c_source_file, ir_file, rule_database_file, insert_line): 
     
     # compile the c source file 
     compile_c_source(c_source_file)
