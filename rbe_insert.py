@@ -21,6 +21,7 @@
 import subprocess
 import os 
 import sys 
+import re
 
 # compiles the c source file using gcc and outputs it to a.out
 def compile_c_source(c_source_file, output_file="a.out"): 
@@ -32,20 +33,32 @@ def compile_c_source(c_source_file, output_file="a.out"):
         sys.exit(1)
 
 # runs the compiled program with 'perf stat' and collects metrics. 
+# The metrics that's being collected is the 'Total Time' and 'Cycles'
 # return the metrics as a tuple as integers. 
 def run_perf_stat(output_file): 
     try: 
         result = subprocess.run( 
             ["perf", "stat", f"./{output_file}"],
             stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,  # ignore the output 
             text=True
         )
         perf_output = result.stderr
         print("Perf output captured")
         
-        # do metrics 
-        metric1, metric2 = 20, 13 # dummy (haha me) values 
-        return metric1, metric2 
+        # extract the metrics from the perf output, Total Time and and Cycles using regex 
+        cycles_match = re.search(r'([\d,]+)\s+cycles', perf_output)
+        time_match = re.search(r'([\d.]+)\s+seconds time elapsed', perf_output)
+        
+        if cycles_match and time_match: 
+            cycles = int(cycles_match.group(1).replace(",", "")) # remove commas and convert to int 
+            total_time = float(time_match.group(1)) # covert to float 
+        else: 
+            print("Failed to extract metrics from perf output")
+            sys.exit(1)
+        
+        return cycles, total_time
+            
     except Exception as e: 
         print(f"Failed to run with perf: {e}")
         sys.exit(1)   
