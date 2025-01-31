@@ -196,8 +196,8 @@ class Rule:
                     print("We have found a match")
                     my_metric = self.metrics[clause][metric]
                     if my_metric == "_":
-                        my_metric = 10000000000000000000
-                    my_metric = int(my_metric)
+                        my_metric = 1000000000000000000000000
+                    my_metric = float(my_metric)
                     print(f"Current metric: {my_metric}")
 
                     min_metric_index = clause
@@ -205,8 +205,8 @@ class Rule:
                     for i in range(len(self.metrics)):
                         other_metric = self.metrics[i][metric]
                         if other_metric == "_":
-                            other_metric = 10000000000000000001
-                        other_metric = int(other_metric)
+                            other_metric = 1000000000000000000000001
+                        other_metric = float(other_metric)
 
                         print(f"Other metric: {other_metric}, My metric: {my_metric}")
                         if other_metric < min_metric:

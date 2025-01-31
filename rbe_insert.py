@@ -38,7 +38,7 @@ def compile_c_source(c_source_file, output_file="a.out"):
 def run_perf_stat(output_file): 
     try: 
         result = subprocess.run( 
-            ["perf", "stat", f"./{output_file}"],
+            ["perf", "stat", "-r", "5", f"./{output_file}"],
             stderr=subprocess.PIPE,
             stdout=subprocess.DEVNULL,  # ignore the output 
             text=True
@@ -47,30 +47,30 @@ def run_perf_stat(output_file):
         print("Perf output captured")
         
         # extract the metrics from the perf output, Total Time and and Cycles using regex 
-        # cycles_match = re.search(r'([\d,]+)\s+cycles', perf_output)
-        # time_match = re.search(r'([\d.]+)\s+seconds time elapsed', perf_output)
-        
-        # if cycles_match and time_match: 
-        #     cycles = int(cycles_match.group(1).replace(",", "")) # remove commas and convert to int 
-        #     total_time = float(time_match.group(1)) # covert to float 
-        #     return cycles, total_time
-        # else: 
-        #     print("Failed to extract metrics from perf output Raw output:")
-        #     print(perf_output)
-        #     sys.exit(1)
-        
-        # cycles wasn't supported on vm so extracting task-clock and total time instead 
-        task_clock_match = re.search(r'([\d.]+)\s+msec task-clock', perf_output)
+        cycles_match = re.search(r'([\d,]+)\s+cycles', perf_output)
         time_match = re.search(r'([\d.]+)\s+seconds time elapsed', perf_output)
         
-        if task_clock_match and time_match:
-            task_clock = float(task_clock_match.group(1))  # Convert to float (milliseconds)
-            total_time = float(time_match.group(1))        # Convert to float (seconds)
-            return task_clock, total_time
-        else:
-            print("Warning: Unable to extract task-clock or elapsed time. Raw output:")
-            print(perf_output)  # Print full output for debugging
+        if cycles_match and time_match: 
+            cycles = int(cycles_match.group(1).replace(",", "")) # remove commas and convert to int 
+            total_time = float(time_match.group(1)) # covert to float 
+            return cycles, total_time
+        else: 
+            print("Failed to extract metrics from perf output Raw output:")
+            print(perf_output)
             sys.exit(1)
+        
+        # cycles wasn't supported on vm so extracting task-clock and total time instead 
+        # task_clock_match = re.search(r'([\d.]+)\s+msec task-clock', perf_output)
+        # time_match = re.search(r'([\d.]+)\s+seconds time elapsed', perf_output)
+        
+        # if task_clock_match and time_match:
+        #     task_clock = float(task_clock_match.group(1))  # Convert to float (milliseconds)
+        #     total_time = float(time_match.group(1))        # Convert to float (seconds)
+        #     return task_clock, total_time
+        # else:
+        #     print("Warning: Unable to extract task-clock or elapsed time. Raw output:")
+        #     print(perf_output)  # Print full output for debugging
+        #     sys.exit(1)
             
     except Exception as e: 
         print(f"Failed to run with perf: {e}")
@@ -98,9 +98,9 @@ def insert_rule_into_database(rule_database_file, ir_tokens, metrics, insert_lin
         
         # insert the new rule at the specifiied line number 
         if insert_line - 1 < len(lines): 
-            lines.insert(insert_line - 1, formatted_rule + " eq\n") 
+            lines.insert(insert_line - 1, formatted_rule + " eq ") 
         else: 
-            lines.append(formatted_rule + " eq\n")
+            lines.append(formatted_rule + "\n")
             
         # write back to the new database file 
         with open(rule_database_file, "w") as f: 
