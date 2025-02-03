@@ -473,7 +473,7 @@ class RBE:
             with open(filename, "r") as f:
                 the_file = f.read()
         except:
-            print(f"Could not open file ({the_file})")
+            print(f"Could not open file ({filename})")
             exit(0)
 
         return the_file
