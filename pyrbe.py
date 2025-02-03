@@ -454,10 +454,12 @@ class Rule:
 
 
 class RBE:
-    def __init__(self):
+    def __init__(self, filename:str):
         self.rules:list[Rule] = []
 
-        self.file_data = self.read_from_file("test.rbe")
+        self.filename = filename
+
+        self.file_data = self.read_from_file(self.filename)
         print(self.file_data)
         rbe_string = self.parse_rbe_string(self.file_data)
         self.rules = self.parse_rules(rbe_string)
@@ -602,7 +604,7 @@ class RBE:
 
 
 if __name__ == "__main__":
-    rbe = RBE()
+    rbe = RBE("test.rbe")
 
     test_tokens = ["if", "(", "x", ">", "0", ")", "{", "printf", "(", ")", ";", "}"]
 
